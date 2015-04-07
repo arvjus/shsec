@@ -1,0 +1,158 @@
+.\" to run with 'groff -man -Tascii shsec.1'
+.TH SHSEC 1 "December 2004" "shsec 0.3.x" "User Manuals"
+.SH NAME
+shsec \- Shared Secret client
+.SH SYNOPSIS
+.B shsec [\-hVvskdl] [\-t 
+.I seconds
+.B ] [\-L 
+.I length
+.B ] [\-o 
+.I file
+.B ] [\-F 
+.I format
+.B ] [\-f 
+.I margin
+.B ] [\-S 
+.I file
+.B ] tag@peer[:port]
+.SH DESCRIPTION
+.B shsec
+(Shared Secret client) is the program which requests 
+.BR shsecd(8)
+to negotiate a shared secret (password) with a peer over 
+the Internet in secure way. The program could be useed to 
+agree on common password over insecure network or create a 
+pre-shared key for VPN. Keys are identified in terms of
+.I tag@peer.
+Key negotiation is started explicitly by specifying 
+.B -i
+option and in case of success, a new key on the peer's side is stored
+into the local key database. On the initiator's side key is returned to 
+the client and not stored into database, unless
+.B -s
+option is given. When a new key arrives into key database on peer's 
+(responder's) side, a local client can retireve this key during 
+given amount of time.  When a client feches a key, the key is 
+deleted automatically unless
+.B -k
+option is specified.
+Negotiated secret could be printed 
+to standard output or stored in file in several formats. 
+Since default behaviour is to fetch requested key and delete 
+it from local key databse, an error is returned if a key does 
+not exist.
+See
+.BR shsecd(8)
+for further details. 
+
+.SH OPTIONS
+.TP
+\-h, \-\-help
+Print this option list, then exit.
+.TP
+\-V, \-\-version
+Print version number, then exit.
+.TP
+\-v, \-\-verbose
+Be verbose. To increase level, specify this option twice. 
+.TP
+\-i, \-\-initiate
+Initiate key exchange if requested does not exist.
+.TP
+\-s, \-\-store
+Store key into key database on initiator's side.
+.TP
+\-k, \-\-keep
+Keep key in key database after key has been fetched.
+.TP
+\-d, \-\-delete
+Delete key from key database immeadetly.
+.TP
+\-l, \-\-list
+List all keys existing on local host.
+.TP
+\-t seconds, \-\-lifetime=seconds
+Validity in seconds for key, stored in database. 
+The default value is 3660 seconds or 1h.
+.TP
+\-L length, \-\-key\-len=length
+Requested key length in bits or some well-known symetric 
+encryption algorithm name. It could be on of these:  
+.I des, des2, des3, aes128, aes192, aes256. 
+The default value is 128.
+.TP
+\-o file, \-\-output=file
+File to write requested key to. The default is to write to
+standard output.
+.TP
+\-F format, \-\-format=format
+Output file format, one of 
+.I raw, hex, base64.
+.TP
+\-f margin, \-\-fmt=margin
+Format output to margin if output format. This options is
+valid only if 
+.B -F
+option is on of 
+.I hex, base64.
+.TP
+\-S file, \-\-sock\-file=file
+Path to socket file. The default file location is
+.I /var/run/shsec/shsecd.sock
+.TP
+tag@peer[:port]
+Tag is to distinguish among several keys. It can consist of any character 
+except '@:'. A peer is an IP address or FQDN to negotiate key with. 
+These arguments are optional if 
+.B -l
+option is set.
+.SH FILES
+.I /var/run/shsec/shsec.sock
+.RS
+This file is used by client to communicate with daemon.
+Another location of the file can be specified by 
+.B -S 
+command line option. 
+.SH ENVIRONMENT
+shsec does not use any enviroment variable at the moment.
+.SH EXAMPLES
+.RE
+hostA$ shsec -i secret1@hostB
+.RS 
+- to initiate a key request from hostA to hostB.
+.RE
+hostB$ shsec -k secret1@hostA
+.RS
+- to retrieve the key on hostB side and keep in key database.
+.RE
+hostB$ shsec -F base64 -o secret.txt secret1@hostA
+.RS
+- to to retrieve the same key on hostB side, save into file 
+encoded ad base64.
+.RE
+hostB$ shsec -l
+.RS
+- to list all existing keys.
+.RE
+hostB$ shsec -d secret1@hostA
+.RS
+- to explicitly delete specified key.
+.SH BUGS
+You are welcome to report about shsec bugs in
+.I https://sourceforge.net/projects/shsec
+.SH AUTHOR
+Arvydas Juskaitis <arvydasj@users.sourceforge.net>
+.SH "SEE ALSO"
+.BR shsecd (8),
+.BR shsec.conf (5).
+A
+.I shsec.txt
+file in documentation directory reveals some details about
+implementation and contains description of communication protocol
+and digital signatures.
+
+
+
+
+

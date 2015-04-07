@@ -1,0 +1,96 @@
+-- ASN.1 definitions for shsec communitation ptotocols
+-- Copyright (C) 2004 Arvydas Juskaitis <arvydasj@users.sourceforge.net>
+-- to compile this file, run 'asn1Parser -o shsec_asn1.h shsec.asn'
+
+SHSEC {5 0}
+
+DEFINITIONS IMPLICIT TAGS ::=
+
+BEGIN
+
+--
+-- common objects
+--
+
+Version ::= INTEGER { v1(1) }
+
+
+--
+-- client-server communication
+--
+
+-- client-server req
+CliReq ::= SEQUENCE {
+	version			Version,
+	reqType			CliReqType,
+	options		[0]	EXPLICIT CliReqOptions OPTIONAL
+}
+
+CliReqType ::= ENUMERATED {
+	requestKey		(1),
+	deleteKey		(2),
+	enumKeys		(3)
+}
+
+CliReqOptions ::= SEQUENCE {
+  	tag			OCTET STRING,
+	peer			OCTET STRING,
+	port		[0]	EXPLICIT INTEGER OPTIONAL,
+	keyLen		[1]	EXPLICIT INTEGER OPTIONAL,
+	flags		[2]	EXPLICIT INTEGER OPTIONAL,
+	expires		[3]	EXPLICIT GeneralizedTime OPTIONAL
+}
+
+-- client-server response 
+CliResp ::= SEQUENCE {
+	version			Version,
+	status			INTEGER,
+	respData	[0]	EXPLICIT CliRespData OPTIONAL
+}
+
+CliRespData ::= CHOICE {
+	key			BIT STRING,
+	keyInfo			SEQUENCE OF CliRespKeyInfo
+}
+
+CliRespKeyInfo ::= SEQUENCE {
+	keyid			OCTET STRING,
+	keyLen			INTEGER,
+	expires			GeneralizedTime
+}
+
+--
+-- server-server communication
+--
+
+-- server-server message, optionally signed
+SrvMsg ::= SEQUENCE {
+	version			Version,
+	tbsMsg			OCTET STRING, -- encoded TBSSrvReq or TBSSrvResp
+	signature	[0]	EXPLICIT Signature OPTIONAL
+}
+
+Signature ::= SEQUENCE {
+	sigAlg			OBJECT IDENTIFIER,
+	sig			OCTET STRING
+}
+
+-- server-server tbsRequest
+TBSSrvReq ::= SEQUENCE {
+	cookie			INTEGER,
+	tag			OCTET STRING,
+	host			OCTET STRING,
+	keyLen			INTEGER,
+	expires			GeneralizedTime,
+	dhGroup			INTEGER,
+	dhPublic		OCTET STRING
+}
+
+-- server-server tbsResponse
+TBSSrvResp ::= SEQUENCE {
+	cookie			INTEGER,
+	status			INTEGER,
+	dhPublic	[0]	EXPLICIT OCTET STRING OPTIONAL
+}
+
+END

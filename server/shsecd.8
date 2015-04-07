@@ -1,0 +1,130 @@
+.\" to run with 'groff -man -Tascii shsecd.8'
+.TH SHSECD 8 "December 2004" "shsecd 0.3.x" "User Manuals"
+.SH NAME
+shsecd \- Shared Secret daemon
+.SH SYNOPSIS
+.B shsecd [\-hVvdDC] [\-c 
+.I config-file
+.B ]
+.SH DESCRIPTION
+.B shsecd
+(Shared Secret daemon) is the daemon program for
+.BR shsec(1)
+and used to negotiate a shared secret (password) 
+by two hosts in secure way over the Internet. See
+.BR shsec(1)
+for further details about functionality. Daemon listens for TCP connections on 
+predefined port (24680 by default, can be changed). It can accept key request from 
+peer and initiate one upon request from a local client. Servers uses Diffie-Hellman 
+key agreement algorithm to negotiate a shared secret and simple protocol to exchange
+public values. Servers could require authenticate each other by requiring 
+request/response to be signed. It is possible to restrict access for local clients 
+as well. This could be done by setting group permissions to unix socket file and 
+users must be members in that group to be able to send request to a daemon. See
+.B SECURITY
+section for further information. 
+No root privileges required to run shsecd. In order to run 
+shsecd for non-privileged users without write access to 
+.I /var/run/shsec
+directory (note this is not default installation), a separate configuration 
+file is specified with 
+.B -c
+command line option where 
+.B pid-file, db-file, sock-file
+options should point to different locations for files. It is also possible to 
+run several instancies of daemon on the same system. See
+.B shsecd.conf(5)
+to get more information. If configuration file was modified while server 
+is running, daemon must be restarted to reload latest configuration. 
+Sending SIGHUP to daemon will not work here. 
+.SH OPTIONS
+.TP
+\-h, \-\-help
+Print this option list, then exit.
+.TP
+\-V, \-\-version
+Print version number, then exit.
+.TP
+\-v, \-\-verbose
+Be verbose. To increase level, specify this option twice. 
+By default only error messages are printed or sent to syslog. 
+.TP
+\-d, \-\-daemon
+Run as daemon, use syslog for logging. shsecd logs messages with 
+.I daemon 
+facility.
+.TP
+\-D, \-\-debug
+Do not fork and print messages to stderr. Used for debuging.
+.TP
+\-C, \-\-child-debug
+If set, children go to sleep to be able to debug. Used for debuging. 
+This option will be removed one day.
+.TP
+\-c file, \-\-conf\-file=file 
+Path to config file. Default is 
+.I /etc/shsecd.conf
+.SH FILES
+.I /etc/shsecd.conf
+.RS
+Configuration file for daemon. Another location of the file 
+can be specified by 
+.BR -c
+command line argument. See
+.BR shsecd.conf(5)
+for further details.
+.RE
+.I /var/run/shsec/shsecd.pid
+.RS
+This file is created by daemon to ensure that only one instance 
+of daemon is running at the time. Another location of the file 
+can be specified by 
+.B pid\-file 
+option in configuration file. 
+.RE
+.I /var/run/shsec/shsecd.db
+.RS
+This file is used to store unexpired keys in case of daemon's shut 
+down.  Another location of the file can be specified by 
+.B db\-file 
+option in configuration file. 
+.RE
+.I /var/run/shsec/shsecd.sock
+.RS
+This file is created by daemon for clients to be able to communicate 
+with. Another location of the file can be specified by 
+.B sock\-file 
+option in configuration file. 
+.SH SECURITY
+shsecd uses signed requests to authenticate a peer. Several 
+algorithms could be used to create a signature, like HMAC-MD5, HMAC-SHA1 
+with pre-shared key or RSA encryption.
+Access for local client is restricted by setting permissions and group id
+to socket file. If daemon is run by root, it sets effective group id to value,
+specified by 
+.B egid
+option in configuration file. Only members of that group permitted access to 
+use the programs. Socket file is recreated every time when daemon starts-up, 
+permissions to 
+.I shsecd.conf
+and 
+.I /var/run/shsec
+directory must be set during installation. If daemon is run by regular user,
+group id for all created files, including socket file, set to default group 
+id of that user.
+.SH ENVIRONMENT
+shsecd does not use any enviroment variable at the moment.
+.SH BUGS
+You are welcome to report about shsecd bugs in
+.I https://sourceforge.net/projects/shsec
+.SH AUTHOR
+Arvydas Juskaitis <arvydasj@users.sourceforge.net>
+.SH "SEE ALSO"
+.BR shsec.conf (5), 
+.BR shsec (1).
+A
+.I shsec.txt
+file in documentation directory reveals some details about
+implementation and contains description of communication protocol
+and digital signatures.
+

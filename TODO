@@ -1,0 +1,13 @@
+List of things to be done for 1.00 ver. release
+-----------------------------------------------
+
+* signed messages. HMAC-SHA1 with pre-shared keys and RSA encryption with MD5.
+  updated:	2004-12-21
+  status:	60%
+  comments:	RSA encryption with MD5 is left to implement.
+
+* run daemon child to cleanup database from expired records
+  updated:	2004-
+  status:	0%
+  comments:	
+

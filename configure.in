@@ -1,0 +1,77 @@
+dnl configure.in - SharedSecret project.
+dnl Copyright (C) 2004 - Arvydas Juskaitis <arvydasj@users.sourceforge.net>
+
+dnl Process this file with autoconf to produce a configure script.
+AC_INIT(server/shsecd.c)
+AM_INIT_AUTOMAKE(shsec, 0.3.4)
+AM_CONFIG_HEADER(include/config.h)
+AC_PREFIX_DEFAULT(/usr)
+
+AC_SUBST(PACKAGE)
+AC_SUBST(VERSION)
+
+dnl Checks for programs.
+AC_PROG_AWK
+AC_PROG_CC
+AM_PROG_LEX
+AC_PROG_LN_S
+AC_PROG_YACC
+AC_PROG_INSTALL
+
+dnl Adjust install dirs.
+if test x"${prefix}" = x"/usr" -o x"${prefix}" = x"NONE"; then
+   if test x"${sysconfdir}" = x'${prefix}/etc'; then
+      sysconfdir="/etc"
+   fi
+   if test x"${localstatedir}" = x'${prefix}/var'; then
+      localstatedir="/var"
+   fi
+fi
+
+if test x"${prefix}" = x"/usr/local"; then	
+   if test x"${localstatedir}" = x'${prefix}/var'; then
+      localstatedir="/var"
+   fi
+fi
+
+dnl Get group id
+SHSEC_GID=`awk -F ':' '/^shsec:/ { print $3 }' /etc/group`
+test -z $SHSEC_GID && SHSEC_GID=0
+AC_SUBST(SHSEC_GID)
+
+dnl Get FQDN
+HOSTNAME_FQDN=`uname -n 2>/dev/null`
+test -z $HOSTNAME_FQDN && HOSTNAME_FQDN=localhost
+AC_SUBST(HOSTNAME_FQDN)
+
+dnl Checks for libraries.
+AC_CHECK_LIB(gnugetopt, getopt_long, , )
+AC_CHECK_LIB(gdbm, gdbm_open, , [AC_MSG_ERROR(gdbm library is not installed)])
+AC_CHECK_LIB(crypto, BN_new, , [AC_MSG_ERROR(openssl/crypto library is not \
+installed)])
+AC_CHECK_LIB(tasn1, asn1_create_element, , [AC_MSG_ERROR(tasn1 library \
+is not installed. You can download source code from \
+"ftp://ftp.gnutls.org/pub/gnutls/libtasn1/")])
+
+dnl Checks for header files.
+AC_HEADER_STDC
+AC_HEADER_SYS_WAIT
+AC_CHECK_HEADERS(fcntl.h syslog.h unistd.h)
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+AC_STRUCT_TM
+
+dnl Checks for library functions.
+AC_FUNC_MEMCMP
+AC_FUNC_VPRINTF
+AC_CHECK_FUNCS(gethostname mktime select socket strdup strerror strspn strtol)
+
+dnl Check getopt_long
+AC_CHECK_FUNCS([getopt_long],,[AC_CHECK_LIB([gnugetopt],[getopt_long],
+[AC_DEFINE([HAVE_GETOPT_LONG])],[AC_LIBOBJ(getopt) AC_LIBOBJ(getopt1)])])
+
+dnl AC_OUTPUT(Makefile server/Makefile client/Makefile htdocs/Makefile)
+AC_OUTPUT(Makefile server/Makefile client/Makefile include/Makefile \
+htdocs/Makefile)
+

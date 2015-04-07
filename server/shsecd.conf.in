@@ -1,0 +1,93 @@
+# configuration file for shsecd
+###############################################################################
+# values for each data type could be:
+# bool		yes|y|Y|1|no|n|N|0
+# number	0123|123|0x123
+# string	"quoted string"|'another one'
+# ipaddr	x.x.x.x
+# network	x.x.x.x/x.x.x.x|x.x.x.x/x
+# identity	<ipaddr>|<network>|<FQDN>
+###############################################################################
+
+# effective group id. if run by root, daemon sets egid to restrict client
+# access to certain users as members of that group.
+# egid		= <number>
+egid		= SHSEC_GID;
+
+# localtion of pid file. default is /var/run/shsec/shsecd.pid
+# pid-file	= <string>
+pid-file	= 'LOCALSTATEDIR/run/shsec/shsecd.pid';
+
+# localtion of key database file. default is /var/run/shsec/shsecd.db
+# keydb-file	= <string>
+keydb-file	= "LOCALSTATEDIR/run/shsec/shsecd.db";
+
+# localtion of socket file. default is /var/run/shsec/shsecd.sock
+# sock-file	= <string>
+sock-file	= "LOCALSTATEDIR/run/shsec/shsecd.sock";
+
+# verbose level can be 0-2. logical 'y' means 1. all error messages vill be 
+# logged/printed, even if you specify quite mode (which is default). 
+# verbose	= <boolean>|<number>
+verbose		= 1;
+
+# flush key database on startup
+# flush-db	= <boolean>
+flush-db	= yes;
+
+# key size in number of bits used for DH key exchange. default is 1024.
+# dh-group	= <number>
+dh-group	= 1024;
+
+# ip address to listen on. default is to listen on any address.
+# listen	= <ipaddr>
+listen		= 0.0.0.0;
+
+# port number to bind to. default is 24680
+# port		= <number>
+port		= 24680;
+
+# Host identity is sent along with request since ip address cannot be used by
+# peer in some cases (host is behind a NAT). Peer uses this id to identify
+# a key.
+# host		= <identity>
+host		= HOSTNAME_FQDN;
+
+# Host keeps it's own credentials here.
+#rsa-key	= "AAAAB3NzaC1kc3MAAACBAMZiPNkfj4vQQKz3/Poe...";
+#rsa-key-file	= "/etc/shsec/secrets/my-net.key";
+
+# These credentials are used to verify signed request send by peer or to 
+# sign a request in case of pre-shared key.
+# peer <identity> {
+#	auth		= none|psk|rsa
+#	psk		= <string>
+#	psk-file	= <string>
+#	rsa-pub		= <string>
+#	rsa-pub-file	= <string>
+# }
+peer trusted.peer.com {
+	auth		= psk;
+	psk		= "my secret";
+#	psk-file	= "/etc/shsec/secrets/trusted-peer.psh";
+#	rsa-pub		= "AAAAB3NzaC1kc3MAAACBAMZiPNkfj4vQQKz3/Poe...";
+#	rsa-pub-file	= "/etc/shsec/secrets/my-net.pub";
+};
+
+# We trust local machine
+peer localhost { auth = none; };
+peer HOSTNAME_FQDN { auth = none; };
+
+# Keyword 'order' used to specify in which order list are processed. Daemon 
+# stops searching on the first match. Default is allow,deny.
+# order	= allow,deny|deny,allow
+order		= allow, deny;
+
+# Daemon tries to find identity, send by host within request, or source address
+# is used if identity is empty.
+# allow/deny = <identity>[, ...]
+allow		= localhost, HOSTNAME_FQDN;
+deny		= 0.0.0.0;
+
+# end of shsecd.conf
+

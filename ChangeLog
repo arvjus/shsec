@@ -1,0 +1,53 @@
+2005-01-16
+0.3.4
+* Bugfix in makefile, when variable DESTDIR was ignored.
+
+0.3.3
+* ACLs implementation. 
+* Port to *BSD system. I tested on FreeBSD 4.10 only.
+* Several bug fixes, including shsecd crash in daemon mode.
+* Updates to shsecd.conf(5) with details on ACL.
+
+2005-01-05
+0.3.2
+* Compilation/installation process is moved to autoconf/automake.
+
+2005-01-01
+0.3.1
+* Authentication with pre-shared key - HMAC-SHA1 signatures.
+
+2004-12-29
+0.3.0
+* Data payloads in communication replaced by DER-encoded messages.
+* Several small bugfixes.
+
+2004-12-16
+0.2.2
+* More infomtative messages sent to output.
+* Version number assignment was automated.
+* Bug related to listen() is fixed.
+* Signal handling.
+
+2004-12-16
+0.2.1
+* Documentation, user manuals, installation support were added.
+* Minor changes in configuration.
+* Client program was renamed into 'shsec'.
+
+2004-12-12
+0.2.0
+* Configuration file was added. 
+* Some command line options were moved to shsecd.conf.
+
+2004-12-10
+0.1.2
+* Ability to run several instancies on the same system.
+
+2004-12-06
+0.1.1
+* I added some instructions how to install.
+
+2004-12-05
+0.1.0
+* Initial release - source code was released for the first time.
+

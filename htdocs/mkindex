@@ -1,0 +1,42 @@
+#!/bin/sh
+
+# the syntax of input file is strict:
+# date - one line
+# version number - one line
+# description - one or more lines begin with '*'
+# one empty line as record separator
+
+# write head
+cat index.html.head 
+
+# write table
+IFS='\n'
+while read LINE; do
+	# end of record
+	if test x"$LINE" = x; then
+		echo "</td>"
+		echo "</tr>"
+		continue
+	# description lines
+	elif echo "$LINE" | grep '^\*' 1>/dev/null 2>/dev/null; then
+		echo "$LINE<br>"
+		continue
+	fi
+	
+	# begin of record - get date
+	echo "<tr>"
+	echo "<td>"
+	echo "$LINE"
+	echo "</td>"
+	
+	# get version
+	read LINE
+	echo "<td>"
+	echo "$LINE"
+	echo "</td>"
+	echo "<td>"
+done
+
+# write tail
+cat index.html.tail 
+

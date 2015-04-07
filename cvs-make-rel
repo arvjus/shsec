@@ -1,0 +1,14 @@
+#!/bin/sh
+
+aclocal 
+autoheader
+export WANTED_AUTOMAKE=1.7
+automake --foreign --copy --add-missing
+touch depcomp		# for older automake
+autoconf
+CFLAGS='-I/usr/include -I/usr/local/include -L/usr/lib -L/usr/local/lib'
+export CFLAGS="$CFLAGS -O2 -Wall -pipe"
+echo "CFLAGS=$CFLAGS"
+echo "./configure $@"
+./configure $@ || exit 1
+make clean && make

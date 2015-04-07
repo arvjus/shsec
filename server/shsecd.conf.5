@@ -1,0 +1,202 @@
+.\" to run with 'groff -man -Tascii shsecd.conf.5'
+.TH SHSECD.CONF 5 "December 2004" "shsecd.conf" "User Manuals"
+.SH NAME
+shsecd.conf \- Shared Secret Daemon configuration file
+.SH DESCRIPTION
+Shared Secret daemon is almost ready to run with 
+options set to defaults. Minimal configuration requires 
+to list allowed peers in
+.B allow
+control list, however. Empty list means no access.
+Note default configuration has several options to 
+setup file locations, in particular
+.B pid-file, db-file, sock-file.
+These files exist in 
+.I /var/run/shsec 
+directory, and non-priveleged users are normally not allowed to setup access to 
+this directory. Configuration file accepts several type of comments: traditional
+.I '#'
+(hash) used in scripting languages or C++ style '//' to comment to the end of string 
+or even C style '/* */' to cover several lines, but these comments cannot be nested.
+Syntax of configuration file is quite simple. Values are assigned to 
+reserved words (options) and each statement is separeted by ';' (semicolon).
+A value can be one of folowing type:
+.TP
+.B boolean
+Can be represented as a string or number.
+.I true
+is 
+.I yes|y|Y|1
+(or any non-zero number) and
+.I false
+is
+.I no|n|N|0. 
+.TP
+.B number
+Any positive integer in decimal 
+.I 123
+, octal 
+.I 0123
+or hexdecimal 
+.I 0x123 
+notation.
+.TP
+.B string
+Any single quoted or double quted string. Following escape 
+sequences could be used inside a string
+.I \et \en \e" \e'
+or even a new line could be escaped - just put 
+.I \e
+at the end of the line and continue on another.
+.TP
+.B ipaddr
+IpV4 address in dotted decimal notation
+.I x.x.x.x
+.TP
+.B network
+IpV4 network address in dotted decimal with subnet mask 
+.I x.x.x.x/x.x.x.x
+or CIDR
+.I x.x.x.x/x
+notations.
+.TP
+.B identity
+Host identity could be
+.B <ipaddr>|<network>|<FQDN>.
+FQDN can be a single quoted, double quoted or non-quoted string.
+.SH OPTIONS
+.TP
+.B egid = <number>
+Effective group id. If run by root, daemon sets egid to restrict client
+access and allow to certain users only, in particular to the members of 
+that group. By default egid is
+.I 0.
+.TP
+.B pid-file = <string>
+Location of pid file. The default value is
+.I /var/run/shsec/shsecd.pid
+.TP
+.B keydb-file = <string>
+Location of key database file. The default value is
+.I /var/run/shsec/shsecd.db
+.TP
+.B sock-file = <string>
+Location of socket file. The default value is
+.I /var/run/shsec/shsecd.sock
+.TP
+.B verbose = <boolean>|<number>
+Verbose level can be 0-2. logical 'y' means 1. All error messages vill be 
+logged or printed, even if you specify quite mode (which is default). 
+.TP
+.B flush-db = <boolean>
+Flush key database on startup. The default value is 
+.I no.
+.TP
+.B dh-group = <number>
+Key size in number of bits used for DH key exchange. Possible values are
+.I 768, 1024, 1536, 2048, 3072, 4096.
+The Default value is 
+.I 1024.
+.TP
+.B listen = <ipaddr>
+Ip address to listen on. The default is to listen on any address.
+.TP
+.B port = <number>
+Port number to bind to. The default value is
+.I 24680.
+.TP
+.B host = <identity>
+Host identity is sent along with request since ip address cannot be used to 
+identify host by peer in some cases (host is behind a NAT).
+Peer uses this id to identify a key. Empty string is acceptable. In this case,
+peer take source address from connection and uses as an idetity.
+.TP
+.B rsa-key = <string>
+Host keeps it's own credentials here.
+.TP
+.B rsa-key-file = <string>
+Host keeps it's own credentials in a separete file here. It makes possible 
+to keep a secret from unauthorized access in some file.
+.TP
+.B peer <identity> { credendial_statements }
+This statement must be created for every peer which allowed to send 
+requests or responses. These credential statements are 
+used to verify signed request send by peer or to sign a request in case 
+of digital signature with pre-shared key. It also specified here how 
+credentials are used. Only one of 
+.B psk, psk-file, rsa-pub, rsa-pub-file
+options is accepted in combination with
+.B auth
+option.
+.TP
+.B auth = none|psk|rsa
+This mandatory option specifies a method of authentication required from 
+peer to be able to sent request/response. 
+.I none
+value allows non-signed messages. In case of 
+.I psk
+or
+.I rsa
+peer is required to sign a message and appropriate credentials must be specified.
+.TP
+.B psk = <string>
+The value of pre-shred key is used to calculate HMAC-SHA1 digest for signing and 
+verification.
+.TP
+.B psk-file = <string>
+The same as above, just makes it possible to keep a secret from unauthorized 
+access in some file.
+.TP
+.B rsa-pub = <string>
+Value used to decrypt RSA signature in order to verify request/response.
+.TP
+.B rsa-pub-file = <string>
+The same as above, just value loaded from a given file.
+.TP
+.B order = <allow,deny>|<deny,allow>
+Option is used to specify in which order access list are processed. 
+Daemon stops searching on the first match. The default order is
+.I allow,deny
+The second value defines default action for those peers which cannot be found in ACL.
+In case of
+.I allow,deny
+eg. this means all requests from non-matched peers will be rejected.
+.TP
+.B allow = <identity>[, ...]
+A list of peers allowed to communicate with the host.
+Daemon tries to find identity, send by host within request to allow access. 
+If no identity was sent by peer, source address is used as a peer identity.
+For every item in this list, a 
+.B peer 
+definition is created whith identity, literally matching to the list item. It is not required 
+by client to request a peer by exact identity as defined in configuration, however. 
+eg. An item in
+.B allow
+list has
+.I 10.0.0.0/24
+as an identity and client sends a request to peer identified by 
+.I 10.0.0.1
+or FQDN which will be resolved to that ip address, so this will work.
+If any item in the list is FQDN and cannot be resolved during configuration reading, 
+access is denied for that peer.
+.TP
+.B
+.B deny = <identity>[, ...]
+A list of peers prohibited to communicate with the host. 
+Daemon tries to find identity, send by host within request to deny access. 
+If no identity was sent by peer, source address is used as a peer identity.
+.SH AUTHOR
+Arvydas Juskaitis <arvydasj@users.sourceforge.net>
+.SH "SEE ALSO"
+.BR shsecd (8), 
+.BR shsec (1).
+A
+.I shsec.txt
+file in documentation directory reveals some details about
+implementation and contains description of communication protocol
+and digital signatures.
+
+
+
+
+

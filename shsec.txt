@@ -1,0 +1,199 @@
+Detail Design Description of shsec (SharedSecret) project.
+Author:  Arvydas Juskaitis <arvydas.juskaitis@gmail.com>
+License: MIT
+
+
+System overview
+---------------
+SharedSecret is a software used to negotiate a shared secret (password) by 
+two hosts in secure way over the Internet. It is written in C, based on 
+client/server architecture with initial intention to run on POSIX-Compliant 
+Operating Systems.
+Client application is provided (shsec), so it could be used to agree on 
+password between two users or create preshared-key for VPN. It could also 
+be used from other applications; possibly simple API will be provided to 
+hide client-server communication details.
+The concept of tag@peer helps to identify keys on both sides. There is no
+way to create several keys between two hosts with the same tag. Existing
+key cannot be replaced by a new key, it must expire first or diferrent tag
+should be used.
+
+
+Functionality
+-------------
+shsecd daemon (server) listens on some predefined port and waits for 
+connection from peer. Requests any peer are initiated by server upon request 
+from client. Initiator sends some parameters like host identity, tag, 
+length of requestd key, key lifetime, dh-group, etc. Keys between daemon and 
+client identified by tag + peer identity  and are uniqueue. So several keys 
+between two peers could exist but only with different tags. 
+Keys are stored in memory and are saved to local database on daemon shutdown 
+if they will still be valid; only daemon has access to the database. 
+Client uses unix socket to communicate with daemon. If a key, which satisfies 
+client's request, exists in database, daemon returns it to the client, 
+otherwise request to peer for a new key is initiated, and client is blocked 
+until negotiation is finished or timeouts. In case of success, a new key is 
+returned to initiator (client) but not saved into local key repository by 
+default. Responder keeps its own key until client fetches it or the key 
+expires. This is default behaviour and could be changed by client. See 
+shsec(1), shsecd(8) and shsecd.conf(5) manuals for further information.
+
+
+Communication Protocol
+----------------------
+
+All data exchanges between client-server and server-server are done by sending
+DER-encoded messages. A version number (currently 1) is sent along with every
+message, which keeps both parties as backward compatible in future development 
+of the protocol. A GNU libtasn1 library helps to encode/decode messages. 
+All GeneralizetTime fields used in protocol contains time value in UTC.
+
+
+client-server communication
+---------------------------
+
+Client-server data exhange consist of two messages: a request message, sent
+by client application and response message, sent back by server. There are 
+three types of client request: to request a key, delete a key and list all 
+existing keys. Contens of response depends on request type. Optional flags 
+sent within request message specifies additional details (eg. to keep or 
+save a key in database) In case of failure 'status' field in response message 
+contains error code and error scope. A 'flags' and 'status' fields are opaque 
+knonwn by client and daemon programs.
+
+
+-- client-server req
+CliReq ::= SEQUENCE {
+	version			Version,
+	reqType			CliReqType,
+	options		[0]	EXPLICIT CliReqOptions OPTIONAL
+}
+
+CliReqType ::= ENUMERATED {
+	requestKey		(1),
+	deleteKey		(2),
+	enumKeys		(3)
+}
+
+CliReqOptions ::= SEQUENCE {
+  	tag			OCTET STRING,
+	peer			OCTET STRING,
+	port		[0]	EXPLICIT INTEGER OPTIONAL,
+	keyLen		[1]	EXPLICIT INTEGER OPTIONAL,
+	flags		[2]	EXPLICIT INTEGER OPTIONAL,
+	expires		[3]	EXPLICIT GeneralizedTime OPTIONAL
+}
+
+-- client-server response 
+CliResp ::= SEQUENCE {
+	version			Version,
+	status			INTEGER,
+	respData	[0]	EXPLICIT CliRespData OPTIONAL
+}
+
+CliRespData ::= CHOICE {
+	key			BIT STRING,
+	keyInfo			SEQUENCE OF CliRespKeyInfo
+}
+
+CliRespKeyInfo ::= SEQUENCE {
+	keyid			OCTET STRING,
+	expires			GeneralizedTime
+}
+
+
+
+server-server communication
+---------------------------
+
+Sever-server data exhange consist of two messages: a request message, sent
+by daemon on host in order to initiate key exchange and response message, 
+sent back by peer. Unique 'cookie' field make messages appear differentlly
+when exchange messages are rent repleateatly between the same hosts with 
+similar data fields. 'tag' and 'host' fields are used to identify a new key 
+on both sides while 'keyLen' specifies the length of requested key in bits. 
+Time value in 'expires' used to keep a key in database for given amount of 
+time. Since the main goal is to exchange public values for DH calculations, 
+it sent in 'dhPublic' field. Prime and base values are not sent, these are 
+predefined in groups and group id (contains number of bits) is sent only. 
+The local policy on each host may require peer to sign request/response. 
+In this case a signature is calculated and encoded into message. How to 
+calculate signatures, see "Signatures for Request/Response" section for 
+further details.
+
+When respoder receives a request message, it must verify data as following:
+1. decode the message. send error message back in case of failure.
+2. check 'version' field. send error message back if not supported.
+3. check against local ACL if host is allowed to communicate with.
+4. calculate and verify digital signature. this is optional and performed if 
+local policy requires signature.
+5. if host-id id FQDN, check check it with source address against A-record 
+in DNS. this is optional and defined by local policy.
+6. check if combination of 'cookie'+'expires' fields is unique for peer and 
+was never used before.
+If verification af any of step 3, 4, 5, 6 fails, how to act (close connection 
+   or send back error message) is defined by local policy.
+
+When initiator receives a response message, it must verify data as following:
+1. decode the message. 
+2. check 'version' field. 
+3. check against local ACL if host is allowed to communicate with.
+4. calculate and verify digital signature. this is optional and performed if 
+local policy requires signature.
+5. if host-id id FQDN, check check it with source address against A-record 
+in DNS. this is optional and defined by local policy.
+6. check if combination of 'cookie'+'expires' fields is unique for peer and 
+was never used before.
+7. check return status. this field is opaque and contains error code known by 
+peers.
+If verification of any of these steps fail, close connection and report an 
+error.
+
+
+-- server-server message, optionally signed
+SrvMsg ::= SEQUENCE {
+	version			Version,
+	tbsMsg			OCTET STRING, -- encoded TBSSrvReq or TBSSrvResp
+	signature	[0]	EXPLICIT Signature OPTIONAL
+}
+
+Signature ::= SEQUENCE {
+	sigAlg			OBJECT IDENTIFIER,
+	sig			OCTET STRING
+}
+
+-- server-server tbsRequest
+TBSSrvReq ::= SEQUENCE {
+	cookie			INTEGER,
+	tag			OCTET STRING,
+	host			OCTET STRING,
+	keyLen			INTEGER,
+	expires			GeneralizedTime,
+	dhGroup			INTEGER,
+	dhPublic		OCTET STRING
+}
+
+-- server-server tbsResponse
+TBSSrvResp ::= SEQUENCE {
+	cookie			INTEGER,
+	status			INTEGER,
+	dhPublic	[0]	EXPLICIT OCTET STRING OPTIONAL
+}
+
+
+Signatures for Request/Response
+-------------------------------
+
+Digital signatures could be calculated in two ways:
+
+1. Using pre-shared key.
+Preshared-key is used as a key to calculate HMAC-SHA1 digest and MAC algorithm
+is applied to TBS field of message. The result is encoded as signature.
+Algorithm OID is 1.3.6.1.5.5.8.1.2 (HMAC-SHA1)
+
+2. Using RSA encryption.
+MD5 hash value is calculated using TBS field of message. Then RSA encryption 
+algorithm is applied on hashed value in PKCS#1 form and encrypted data is 
+encoded as signature.
+Algorithm OID is 1.2.840.113549.1.1.4 (MD5 with RSA encryption)
+

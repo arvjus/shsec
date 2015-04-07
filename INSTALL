@@ -1,0 +1,108 @@
+
+Install instructions for SharedSecret
+=====================================
+
+Dependencies
+------------
+
+Before you begin, make sure following software is installed:
+* make, gcc with standard libraries.
+* yacc, lex - (to have bison and/or lex is sufficient)
+* autoconf, automake - optional (to be able to build software from CVS)
+* gnugetopt - required to be abe to build on FreeBSD system.
+* GNU gdbm - It was tested with 1.8.0 version.
+* openssl - It was tested with 0.9.7d version.  
+* libtasn1 (ftp://ftp.gnutls.org/pub/gnutls/libtasn1/) - It was tested with
+  0.2.6 version.
+
+
+Get source code and unpack
+--------------------------
+
+The latest version could be downloaded from 
+https://sourceforge.net/projects/shsec/
+Unpack archive:
+
+$ tar -xzf shsec-0.x.x-tar.gz
+
+
+Default installation
+--------------------
+
+$ cd shsec
+$ ./configure
+$ make && make install
+
+The default prefix is '/usr', so it requires root privileges to install here.
+
+
+Installing with another location
+--------------------------------
+
+It is possible to change destination directories and intall programs wherever 
+priveleges of the current user allow to do that. All destination directories
+are related to prefix directory with two exceptions:
+1. if prefix='/usr' or prefix='/usr/local', then the local state directory 
+   is set to '/var'. 
+2. if prefix='/usr', then system config directory set to '/etc'. It is for
+   daemon configuration file.
+
+The followed configuration options could be used with ./configure script:
+
+--prefix=PREFIX
+Base directory to all location with exceptions had mentioned above.
+
+--bindir=DIR
+Client program 'shsec' is installed here.
+
+--sbindir=DIR
+Daemon program 'shsecd' is installed here.
+
+--sysconfdir=DIR
+Configuration file 'shsecd.conf' for daeomon goes here.
+
+--localstatedir=DIR
+A 'run/shsec' dir is created, related to the local state 
+directory. Daeomon pid file, key database, unix socket files are created 
+here, when daemon runs.
+
+--mandir=DIR
+shsec(1), shsecd(8), shsecd.conf(5) manuals.
+
+--datadir=DIR
+A 'doc/shsec-x.x.x' dirextory is created under data dir, and all other 
+documetation, readme file, this install file, etc. are installed here.
+
+
+Restrict access to local clients
+--------------------------------
+
+In order to restrict access to local clients, create an unix group in
+/etc/group with a name 'shsec' with any unsused group id. So only members
+of 'shsec' group will be permitted access to use the programs. This must be
+done _before_  running './configure'. If no 'shsec' group has been found 
+during configuration, gid=0 is used. Note all this client restriction stuff
+works only if daemon is run by root. If daemon is run by any non-priveleged 
+user, regular file-related restrictions apply. See shsecd(8) and shsecd.conf(5) 
+for further information.
+
+
+Build/install software from CVS
+-------------------------------
+
+$ mkdir shsec && cd shsec
+$ cvs -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/shsec update .
+$ ./cvs-make-rel [--prefix=PREFIX ...]
+$ make install
+
+All arguments given to './cvs-make-rel' are sent to './configure' script.
+Note  to be able to build the software in this way, autoconf, automake
+packages are required.
+
+
+Uninstall software
+------------------
+
+$ make uninstall
+
+

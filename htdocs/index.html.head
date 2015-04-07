@@ -1,0 +1,60 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+
+<head profile="/">
+  <title>SharedSecret homepage</title>
+</head>
+
+<body> 
+<div align="center"><h2>SharedSecret homepage</h2></div>
+
+<font size="+1"><b>Author:</b></font><br>
+Copyright (C) 2004, 2005 by <a href=https://sourceforge.net/users/arvydasj/>Arvydas Juskaitis</a>.
+You can send a message to the author <a href=https://sourceforge.net/sendmessage.php?touser=1172327/>here</a>.
+<p>
+<font size="+1"><b>License:</b></font><br>
+The software was released under MIT. 
+<p>
+<font size="+1"><b>Description:</b></font><br>
+SharedSecret is a program used to negotiate a shared secret (password) between
+two hosts in secure way over the Internet. It is written in C, based on
+client/server architecture with initial intention to run on POSIX-Compliant Operating Systems.
+Client application is provided, so it could be used to agree on password
+between two users or create preshared-key for VPN. It could also be used from
+other applications; possibly simple API will be provided to hide communication
+details. The 1st version of protocol is going to support digitally signed requests/responses.
+Signature can be calculated with pre-shared key as HMAC-SHA1 digest or MD5 hash values
+with RSA encryption.
+<p>
+<font size="+1"><b>Functionality Overview:</b></font><br>
+Functionality is quite simple. A daemon is running on each side (no root
+privileges required) which accepts requests from peer and initiates key exchange
+upon client request. It uses Diffie-Hellman key agreement algorithm and very
+simple protocol based on TCP to exchange payloads. See
+<a href=http://shsec.sourceforge.net/shsec.txt>Detail Design Description</a>,
+<a href=http://shsec.sourceforge.net/shsec.1.html>shsec(1)</a>,
+<a href=http://shsec.sourceforge.net/shsecd.8.html>shsecd(8)</a>,
+<a href=http://shsec.sourceforge.net/shsecd.conf.5.html>shsecd.conf(5)</a>
+for further details.
+<p>
+<font size="+1"><b>Download and Install:</b></font><br>
+<a href=https://sourceforge.net/projects/shsec/>Project Summary</a> contains links to 
+download page, just take the latest source code, unpack, read 
+<a href=http://shsec.sourceforge.net/INSTALL>INSTALL</a>
+file and follow instructions there.
+<p>
+<font size="+1"><b>Future Plans:</b></font><br>
+I have some plans to release a stable and fully functional version of daemon and client
+according to design for the 1st version.  If you have some thoughts how to improve 
+usability of the program or have some notes, please, just let me know.
+<p>
+<font size="+1"><b>News:</b></font><br>
+<table border="1" frame="border">
+<thead>
+<tr>
+<th>Date</th>      
+<th>Version</th>
+<th>Changes</th>
+</tr>
+</thead>
+<tbody>
