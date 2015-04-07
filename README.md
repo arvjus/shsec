@@ -1,6 +1,13 @@
-Project: shsec (SharedSecret)
-Author:  Arvid Juskaitis arvydas.juskaitis@gmail.com
-License: GPL
+## SharedSecret
+
+
+### License
+
+The MIT License (MIT)
+
+Copyright © 2004-2005 Arvid Juskaitis <arvydas.juskaitis@gmail.com>
+
+### Quick overview
 
 SharedSecret is a software used to negotiate a shared secret (password) by 
 two hosts in secure way over the Internet. It is written in C, based on 
@@ -28,35 +35,43 @@ and (of cource!) take a look at the source code. Note for best readability
 tab size = 4 sould be used.
 
 
-Some usage examples (assume shsecd is running):
+### Some usage examples (assume shsecd is running):
 
 1. to initiate key exchange, labeled 'secret1' exchange on hostA to hostB and 
 print result key to stdout:
 
+```bash
 hostA$ shsec -i secret1@hostB 
+```
 
 2. to retrieve the same key on peer site without deleting from the local key database: 
 
+```bash
 hostB$ shsec -k secret1@hostA
+```
 
 3. save a key into secret.key file in binary (raw) format:
 
+```bash
 hostB$ shsec -k -F raw -o secret.key secret1@hostA
+```
 
 4. to run two instances of daemon on the same machine:
 
 create a config file and specify port (eg 10001 and 10002) and socket, keydb, 
 pid files for each daemon instance:
 
+```bash
 $ shsecd -d -c shsec1.conf
 $ shsecd -d -c shsec2.conf
-
+```
 
 then initiate key request from one server and retrieve a key on another:
 
+```bash
 $ shsec -vi -S shsec1.sock secret1@localhost:10002 
 $ shsec -vk -S shsec2.sock secret1@localhost 
-
+```
 
 try 'shsec -h' to get more options.
 
